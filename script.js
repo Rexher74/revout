@@ -55,7 +55,7 @@ class Ball {
 }
 
 class Game {
-    constructor(rows = 15, cols = 29, timePerLevel = 10, marketEvery = 5, baseWalls = 16,
+    constructor(rows = 15, cols = 29, timePerLevel = 10, marketEvery = 5, baseWalls = 20,
         distanceToBuildFromEnemyKing = 6
     ) {
         this.rows = rows;
