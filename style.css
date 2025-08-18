@@ -111,6 +111,8 @@ body {
 }
 
 #purchaseBar {
+    overflow-y: hidden;
+    scrollbar-width: thin;
     height: 80%;
     align-items: center;
     width: 50%;
