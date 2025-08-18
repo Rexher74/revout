@@ -45,7 +45,7 @@ class Ball {
 }
 
 class Game {
-    constructor(rows = 15, cols = 29, timePerLevel = 15, marketEvery = 5, baseWalls = 15,
+    constructor(rows = 15, cols = 29, timePerLevel = 15, marketEvery = 5, baseWalls = 16,
         distanceToBuildFromEnemyKing = 6
     ) {
         this.rows = rows;
@@ -173,22 +173,82 @@ class Game {
         return false;
     }
 
-    generateBaseWalls(num) {
-        for (let i = 0; i < num; ++i) {
-            let done = false;
-            while (!done) {
-                let col = getRandomInt(this.cols-2)+1; // Nos aseguramos que no hay ningún Base Wall tocando a un lateral
-                let row = getRandomInt(this.rows-2)+1; // Nos aseguramos que no hay ningún Base Wall tocando a un lateral
-                if (this.gridState[row][col] == null) {
-                    this.gridState[row][col] = new BaseWall();
-                    let cell = this.gridCells[row][col];
-                    cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
-                    cell.classList.add("cellBaseWall");
-                    done = true;
+    generateBaseWalls(numBW) {
+        let num = numBW;
+        // Helper to place a base wall if not present
+        const tryPlaceBaseWall = (row, col) => {
+            if (
+                row >= 0 && row < this.rows &&
+                col >= 0 && col < this.cols &&
+                this.gridState[row][col] == null
+            ) {
+                this.gridState[row][col] = new BaseWall();
+                let cell = this.gridCells[row][col];
+                cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                cell.classList.add("cellBaseWall");
+                return true;
+            }
+            return false;
+        };
+
+        if (this.nplayers === 1) {
+            // Original behavior
+            for (let i = 0; i < num; ++i) {
+                let done = false;
+                while (!done) {
+                    let col = getRandomInt(this.cols - 2) + 1;
+                    let row = getRandomInt(this.rows - 2) + 1;
+                    if (tryPlaceBaseWall(row, col)) {
+                        done = true;
+                    }
+                }
+            }
+        } else if (this.nplayers === 2) {
+            num /= 2;
+            // Place in left half and mirror to right half
+            let placed = 0;
+            let maxCol = Math.floor(this.cols / 2) - 1;
+            while (placed < num) {
+                let col = getRandomInt(maxCol - 1) + 1; // avoid border
+                let row = getRandomInt(this.rows - 2) + 1;
+                let mirrorCol = this.cols - 1 - col;
+                // Place on left half
+                if (tryPlaceBaseWall(row, col)) {
+                    // Mirror to right half
+                    if (col !== mirrorCol) {
+                        tryPlaceBaseWall(row, mirrorCol);
+                    }
+                    placed++;
+                }
+            }
+        } else if (this.nplayers === 4) {
+            // Place in top-left quadrant and mirror to other quadrants
+            num /= 4;
+            let placed = 0;
+            let maxRow = Math.floor(this.rows / 2) - 1;
+            let maxCol = Math.floor(this.cols / 2) - 1;
+            while (placed < num) {
+                let row = getRandomInt(maxRow - 1) + 1;
+                let col = getRandomInt(maxCol - 1) + 1;
+                let positions = [
+                    [row, col],
+                    [row, this.cols - 1 - col],
+                    [this.rows - 1 - row, col],
+                    [this.rows - 1 - row, this.cols - 1 - col]
+                ];
+                // Only place if all positions are empty
+                let canPlaceAll = positions.every(([r, c]) =>
+                    r >= 0 && r < this.rows && c >= 0 && c < this.cols && this.gridState[r][c] == null
+                );
+                if (canPlaceAll) {
+                    for (let [r, c] of positions) {
+                        tryPlaceBaseWall(r, c);
+                    }
+                    placed++;
                 }
             }
         }
-    }  
+    }
 
     endGame() {
         let playersToBe;
@@ -494,7 +554,7 @@ class Game {
         let startY = this.canvas.height / 2;
         for (let i = 0; i < balls; i++) {
             let angle = Math.random() * 2 * Math.PI;
-            let speed = 300;
+            let speed = 500;
             let vx = Math.cos(angle) * speed;
             let vy = Math.sin(angle) * speed;
             this.balls.push(new Ball(startX, startY, vx, vy));

@@ -9,6 +9,7 @@ body {
     color: white;
     background: #737373;
     font-family: 'Bricolage Grotesque';
+    overflow: hidden;
 }
 
 #grid {
