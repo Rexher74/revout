@@ -1,10 +1,8 @@
-function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-
 // Classes
 
 // Class by ChatGPT
 class Ball {
-    constructor(x, y, vx, vy, radius = 5) {
+    constructor(x, y, vx, vy, radius = 10) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -45,7 +43,7 @@ class Ball {
 }
 
 class Game {
-    constructor(rows = 15, cols = 29, timePerLevel = 15, marketEvery = 5, baseWalls = 16,
+    constructor(rows = 15, cols = 29, timePerLevel = 10, marketEvery = 5, baseWalls = 16,
         distanceToBuildFromEnemyKing = 6
     ) {
         this.rows = rows;
@@ -94,7 +92,8 @@ class Game {
                 const structure = this.gridState[r][c];
                 if (!(structure instanceof Structure)) continue;
 
-                const rect = this.getCellRect(r, c);
+                // Inflate the rectangle by 1 pixel on each side
+                let rect = this.getCellRect(r, c);
                 const closestX = clamp(ball.x, rect.x, rect.x + rect.w);
                 const closestY = clamp(ball.y, rect.y, rect.y + rect.h);
                 let dx = ball.x - closestX;
@@ -137,7 +136,7 @@ class Game {
                             const livesDiv = cell.querySelector("div");
                             if (livesDiv) livesDiv.textContent = structure.lives;
                         }
-                    } else if (structure instanceof King) {
+                    } else if (structure instanceof King && !this.isProtectedByAdjacentStructures(r, c)) {
                         this.gridState[r][c] = null;
                         const cell = this.gridCells[r][c];
                         cell.style.backgroundColor = "";
@@ -157,7 +156,7 @@ class Game {
                             const livesDiv = cell.querySelector("div");
                             if (livesDiv) livesDiv.textContent = structure.lives;
                         }
-                    } else if (structure instanceof Bank) {
+                    } else if (structure instanceof Bank && !this.isProtectedByAdjacentStructures(r, c)) {
                         // Banks allways has 1 life
                         this.gridState[r][c] = null;
                         const cell = this.gridCells[r][c];
@@ -172,6 +171,21 @@ class Game {
         }
         return false;
     }
+
+    // Returns true if the cell at (r, c) is protected by an adjacent (orthogonal) structure
+    isProtectedByAdjacentStructures(r, c) {
+        // Check top
+        if (r > 0 && this.gridState[r-1][c] == null) return false;
+        // Check bottom
+        if (r < this.rows-1 && this.gridState[r+1][c] == null) return false;
+        // Check left
+        if (c > 0 && this.gridState[r][c-1] == null) return false;
+        // Check right
+        if (c < this.cols-1 && this.gridState[r][c+1] == null) return false;
+        
+        return true;
+    }
+    
 
     generateBaseWalls(numBW) {
         let num = numBW;
@@ -546,8 +560,10 @@ class Game {
         this.targetPurchase.classList.add("itemSelected");
     }
 
-    nextLevel() {
-        let balls = 10+(this.level-1)*5;
+    nextLevel(levelBalls = null) {
+        let balls;
+        if (levelBalls == null) balls = 1000+(this.level-1)*5;
+        else balls = levelBalls;
         clearTimeout(this.levelTimer);
         this.balls = [];
         let startX = this.canvas.width / 2;
@@ -723,6 +739,8 @@ var endGameDiv = document.getElementById("endGameDiv");
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 // Game development
 
