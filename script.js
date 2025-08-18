@@ -2,7 +2,7 @@
 
 // Class by ChatGPT
 class Ball {
-    constructor(x, y, vx, vy, radius = 10) {
+    constructor(x, y, vx, vy, radius = 7) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -10,28 +10,40 @@ class Ball {
         this.radius = radius;
     }
     update(dt, game) {
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
+        // Determine how many sub-steps to use based on speed
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const distance = speed * dt;
+        // Use at least 1 step, more if distance is large compared to radius
+        const steps = Math.ceil(distance / (this.radius / 2));
+        const subdt = dt / steps;
 
-        // Use grid content bounds (excluding grid padding outside of cells)
-        const g = game.geom;
-        const left   = g.padLeft;
-        const right  = g.padLeft + g.contentW;
-        const top    = g.padTop;
-        const bottom = g.padTop + g.contentH;
+        for (let i = 0; i < steps; i++) {
+            this.x += this.vx * subdt;
+            this.y += this.vy * subdt;
 
-        // World bounds bounce
-        if (this.x - this.radius < left || this.x + this.radius > right) {
-            this.vx *= -1;
-            this.x = clamp(this.x, left + this.radius, right - this.radius);
+            // Check collisions with structures
+            if (game.checkBallStructureCollision(this)) {
+                break;
+            }
+
+            // Check collisions with grid boundaries
+            if (this.x - this.radius < 0) {
+                this.x = this.radius;
+                this.vx *= -1;
+            }
+            if (this.x + this.radius > game.canvas.width) {
+                this.x = game.canvas.width - this.radius;
+                this.vx *= -1;
+            }
+            if (this.y - this.radius < 0) {
+                this.y = this.radius;
+                this.vy *= -1;
+            }
+            if (this.y + this.radius > game.canvas.height) {
+                this.y = game.canvas.height - this.radius;
+                this.vy *= -1;
+            }
         }
-        if (this.y - this.radius < top || this.y + this.radius > bottom) {
-            this.vy *= -1;
-            this.y = clamp(this.y, top + this.radius, bottom - this.radius);
-        }
-
-        // Structure collisions
-        this.collided = game.checkBallStructureCollision(this);
     }
     draw(ctx) {
         ctx.beginPath();
@@ -91,8 +103,6 @@ class Game {
                 if (c < 0 || c >= this.cols) continue;
                 const structure = this.gridState[r][c];
                 if (!(structure instanceof Structure)) continue;
-
-                // Inflate the rectangle by 1 pixel on each side
                 let rect = this.getCellRect(r, c);
                 const closestX = clamp(ball.x, rect.x, rect.x + rect.w);
                 const closestY = clamp(ball.y, rect.y, rect.y + rect.h);
@@ -119,10 +129,13 @@ class Game {
                         ball.x += nx * penetration;
                         ball.y += ny * penetration;
                     }
-                    const dot = ball.vx * nx + ball.vy * ny;
+                    let ball_vx = ball.vx;
+                    let ball_vy = ball.vy;
+                    const dot = ball_vx * nx + ball_vy * ny;
                     ball.vx -= 2 * dot * nx;
                     ball.vy -= 2 * dot * ny;
-
+                    console.log("nx",nx);
+                    console.log("ny",ny);
                     // Differentiate structure types
                     if (structure instanceof Wall) {
                         if (structure.reduceLives()) {
@@ -136,7 +149,7 @@ class Game {
                             const livesDiv = cell.querySelector("div");
                             if (livesDiv) livesDiv.textContent = structure.lives;
                         }
-                    } else if (structure instanceof King && !this.isProtectedByAdjacentStructures(r, c)) {
+                    } else if (structure instanceof King) {
                         this.gridState[r][c] = null;
                         const cell = this.gridCells[r][c];
                         cell.style.backgroundColor = "";
@@ -156,7 +169,7 @@ class Game {
                             const livesDiv = cell.querySelector("div");
                             if (livesDiv) livesDiv.textContent = structure.lives;
                         }
-                    } else if (structure instanceof Bank && !this.isProtectedByAdjacentStructures(r, c)) {
+                    } else if (structure instanceof Bank) {
                         // Banks allways has 1 life
                         this.gridState[r][c] = null;
                         const cell = this.gridCells[r][c];
@@ -170,20 +183,6 @@ class Game {
             }
         }
         return false;
-    }
-
-    // Returns true if the cell at (r, c) is protected by an adjacent (orthogonal) structure
-    isProtectedByAdjacentStructures(r, c) {
-        // Check top
-        if (r > 0 && this.gridState[r-1][c] == null) return false;
-        // Check bottom
-        if (r < this.rows-1 && this.gridState[r+1][c] == null) return false;
-        // Check left
-        if (c > 0 && this.gridState[r][c-1] == null) return false;
-        // Check right
-        if (c < this.cols-1 && this.gridState[r][c+1] == null) return false;
-        
-        return true;
     }
     
 
@@ -372,7 +371,7 @@ class Game {
             let priceElement = parseInt(this.targetPurchase.dataset.price);
             let typeStructure = this.targetPurchase.dataset.type;
             let currentMoneyPlayer = parseInt(this.moneyPlayers[this.marketTourn].textContent);
-            if (currentMoneyPlayer >= priceElement && (this.gridState[r][c] == null || this.gridState[r][c].color == CODE_PLAYERS[this.marketTourn])) {
+            if (currentMoneyPlayer >= priceElement && (this.gridState[r][c] == null || (this.gridState[r][c].color == CODE_PLAYERS[this.marketTourn] && !(this.gridState[r][c] instanceof King)))) {
                 if (this.noNearEnemy(r, c, CODE_PLAYERS[this.marketTourn])) {
                     if (typeStructure == "wall") {
                         this.gridState[r][c] = new Wall(livesElement, CODE_PLAYERS[this.marketTourn]);
@@ -562,7 +561,7 @@ class Game {
 
     nextLevel(levelBalls = null) {
         let balls;
-        if (levelBalls == null) balls = 1000+(this.level-1)*5;
+        if (levelBalls == null) balls = 10 + 5*(this.level-1);
         else balls = levelBalls;
         clearTimeout(this.levelTimer);
         this.balls = [];
