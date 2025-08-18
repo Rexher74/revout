@@ -57,7 +57,7 @@ class Ball {
 }
 
 class Game {
-    constructor(rows = 15, cols = 29, timePerLevel = 10, marketEvery = 5, baseWalls = 20,
+    constructor(rows = 15, cols = 29, timePerLevel = 1, marketEvery = 5, baseWalls = 20,
         distanceToBuildFromEnemyKing = 6
     ) {
         this.rows = rows;
@@ -169,14 +169,17 @@ class Game {
                             const livesDiv = cell.querySelector("div");
                             if (livesDiv) livesDiv.textContent = structure.lives;
                         }
-                    } else if (structure instanceof Bank) {
+                    } else if (structure instanceof Bank ||
+                        structure instanceof Healer ||
+                        structure instanceof HealerPlus
+                    ) {
                         // Banks allways has 1 life
                         this.gridState[r][c] = null;
                         const cell = this.gridCells[r][c];
                         cell.classList.remove("cellWall");
                         cell.style.backgroundColor = "";
                         cell.innerHTML = "";
-                    }
+                    } 
 
                     return true;
                 }
@@ -395,6 +398,20 @@ class Game {
                         cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
                         cell.classList.add("cellWall");
                         cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">account_balance</span></div><span class="infoDownStructureCenter">+${moneyPerTourn}€</span>`;
+                    }
+                    else if (typeStructure == "healer") {
+                        let healPerTourn = parseInt(this.targetPurchase.dataset.healpertourn);
+                        this.gridState[r][c] = new Healer(CODE_PLAYERS[this.marketTourn], healPerTourn, r, c);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall");
+                        cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">favorite</span></div><span class="infoDownStructureCenter">+${healPerTourn}</span>`;
+                    }
+                    else if (typeStructure == "healerplus") {
+                        let healPerTourn = parseInt(this.targetPurchase.dataset.healpertourn);
+                        this.gridState[r][c] = new HealerPlus(CODE_PLAYERS[this.marketTourn], healPerTourn, r, c);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall");
+                        cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">heart_plus</span></div><span class="infoDownStructureCenter">+${healPerTourn}</span>`;
                     }
                     this.moneyPlayers[this.marketTourn].textContent = `${currentMoneyPlayer-priceElement}€`;
                 }
@@ -730,18 +747,80 @@ class BaseWall extends Structure {
 
 class Bank extends Structure {
     constructor(color, moneyPerTourn) {
-        super(1); // Vidas infinitas
+        super(1);
         this.color = color;
         this.moneyPerTourn = moneyPerTourn;
     }
-
-
     // Inc. money
     makeAction() {
         let moneyP = parseInt(game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent);
         if (!isNaN(moneyP)) {
             moneyP += this.moneyPerTourn;
             game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent = `${moneyP}€`;
+        }
+    }
+}
+
+class Healer extends Structure {
+    constructor(color, healPerTourn, row, col) {
+        super(1);
+        this.color = color;
+        this.healPerTourn = healPerTourn;
+        this.r = row;
+        this.c = col;
+    }
+
+    makeAction() {
+        let r = this.r;
+        let c = this.c;
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1] // ortogonales
+        ];
+        for (const [dr, dc] of directions) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < game.rows && nc >= 0 && nc < game.cols) {
+                const neighbor = game.gridState[nr][nc];
+                if (neighbor != null && (neighbor instanceof Wall || neighbor instanceof RegeWall) && neighbor.color === this.color) {
+                    console.log("Entered");
+                    neighbor.lives += this.healPerTourn;
+                    // Actualizar la UI
+                    const cell = game.gridCells[nr][nc];
+                    const livesEl = cell.querySelector("div");
+                    if (livesEl) livesEl.textContent = neighbor.lives;
+                }
+            }
+        }
+    }
+}
+
+class HealerPlus extends Structure {
+    constructor(color, healPerTourn, row, col) {
+        super(1);
+        this.color = color;
+        this.healPerTourn = healPerTourn;
+        this.r = row;
+        this.c = col;
+    }
+
+    makeAction() {
+        let r = this.r;
+        let c = this.c;
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1], // ortogonales
+            [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonales
+        ];
+        for (const [dr, dc] of directions) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < game.rows && nc >= 0 && nc < game.cols) {
+                const neighbor = game.gridState[nr][nc];
+                if (neighbor && (neighbor instanceof Wall || neighbor instanceof RegeWall) && neighbor.color === this.color) {
+                    neighbor.lives += this.healPerTourn;
+                    // Actualizar la UI
+                    const cell = game.gridCells[nr][nc];
+                    const livesEl = cell.querySelector("div");
+                    if (livesEl) livesEl.textContent = neighbor.lives;
+                }
+            }
         }
     }
 }
