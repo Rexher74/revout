@@ -2,12 +2,14 @@
 
 // Class by ChatGPT
 class Ball {
-    constructor(x, y, vx, vy, radius = 7) {
+    constructor(x, y, vx, vy, damage = 1, color = "white", radius = 7) {
         this.x = x;
         this.y = y;
         this.vx = vx;
         this.vy = vy;
         this.radius = radius;
+        this.damage = damage;
+        this.color = color;
     }
     update(dt, game) {
         // Determine how many sub-steps to use based on speed
@@ -48,7 +50,7 @@ class Ball {
     draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
     }
@@ -134,11 +136,9 @@ class Game {
                     const dot = ball_vx * nx + ball_vy * ny;
                     ball.vx -= 2 * dot * nx;
                     ball.vy -= 2 * dot * ny;
-                    console.log("nx",nx);
-                    console.log("ny",ny);
                     // Differentiate structure types
                     if (structure instanceof Wall) {
-                        if (structure.reduceLives()) {
+                        if (structure.reduceLives(ball.damage)) {
                             this.gridState[r][c] = null;
                             const cell = this.gridCells[r][c];
                             cell.classList.remove("cellWall");
@@ -158,7 +158,7 @@ class Game {
                     } else if (structure instanceof BaseWall) {
                         // Nothing to do here
                     } else if (structure instanceof RegeWall) {
-                        if (structure.reduceLives()) {
+                        if (structure.reduceLives(ball.damage)) {
                             this.gridState[r][c] = null;
                             const cell = this.gridCells[r][c];
                             cell.classList.remove("cellWall", "regeWallStyle");
@@ -193,7 +193,9 @@ class Game {
             if (
                 row >= 0 && row < this.rows &&
                 col >= 0 && col < this.cols &&
-                this.gridState[row][col] == null
+                this.gridState[row][col] == null &&
+                !this.isCenter(row, col)
+
             ) {
                 this.gridState[row][col] = new BaseWall();
                 let cell = this.gridCells[row][col];
@@ -276,9 +278,6 @@ class Game {
 
     eliminatePlayer(color) {
         this.eliminatedPlayers[COLOR_TO_PLAYER[color]] = 1;
-        console.log(this.moneyPlayers)
-        console.log(COLOR_TO_PLAYER[color])
-        console.log(color)
         this.moneyPlayers[COLOR_TO_PLAYER[color]].textContent = "-";
         if (this.endGame()) {
             this.stopGame();
@@ -365,6 +364,10 @@ class Game {
         }
     }
 
+    isCenter(r, c) {
+        return (r == ((this.rows-1)/2) && c == ((this.cols-1)/2));
+    }
+
     cellClicked(r, c, cell) {
         if (this.targetPurchase) {
             let livesElement = parseInt(this.targetPurchase.dataset.lives);
@@ -372,7 +375,7 @@ class Game {
             let typeStructure = this.targetPurchase.dataset.type;
             let currentMoneyPlayer = parseInt(this.moneyPlayers[this.marketTourn].textContent);
             if (currentMoneyPlayer >= priceElement && (this.gridState[r][c] == null || (this.gridState[r][c].color == CODE_PLAYERS[this.marketTourn] && !(this.gridState[r][c] instanceof King)))) {
-                if (this.noNearEnemy(r, c, CODE_PLAYERS[this.marketTourn])) {
+                if (this.noNearEnemy(r, c, CODE_PLAYERS[this.marketTourn]) && !this.isCenter(r, c)) {
                     if (typeStructure == "wall") {
                         this.gridState[r][c] = new Wall(livesElement, CODE_PLAYERS[this.marketTourn]);
                         cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
@@ -484,7 +487,6 @@ class Game {
     }
 
     makeLevelActions() {
-        console.log("MakeActions");
         for (let r = 0; r < this.rows; ++r) {
             for (let c = 0; c < this.cols; ++c) {
                 let structure = this.gridState[r][c];
@@ -494,7 +496,6 @@ class Game {
     }
 
     startMarket() {
-        console.log("MarketStarted")
         for (let i = this.nplayers; i < 4; ++i) {
             this.moneyPlayers[i].textContent = "-";
         }
@@ -550,7 +551,14 @@ class Game {
         if (this.targetPurchase) this.targetPurchase.classList.remove("itemSelected");
         this.targetPurchase = undefined;
         playerTourn.style.backgroundColor = "white";
-        present(`Level ${this.level}`, () => this.nextLevel());
+        this.startNewLevel();
+    }
+
+    startNewLevel() {
+        let {damage, color} = this.getBallExtraInfo(this.level);
+        let stLevel = null;
+        if (damage != 1) stLevel = `x${damage} Damage Balls!`;
+        present(`Level ${this.level}`, () => this.nextLevel(damage, color), stLevel);
     }
 
     selectItemToPurchase(t) {
@@ -559,10 +567,34 @@ class Game {
         this.targetPurchase.classList.add("itemSelected");
     }
 
-    nextLevel(levelBalls = null) {
-        let balls;
-        if (levelBalls == null) balls = 10 + 5*(this.level-1);
-        else balls = levelBalls;
+    getBallExtraInfo(level) {
+        let probs = this.getProbs(level);
+        let selection = this.selectProb(probs);
+        return BALL_INFO[selection];
+    }
+
+    generateDistribution(x) {
+        return [1, x/20, Math.pow(x, 2)/500, Math.pow(x, 3)/10000, Math.pow(x, 4)/500000];
+    }
+        
+    getProbs(x) {
+        const weights = this.generateDistribution(x);
+        const total = weights.reduce((a, b) => a + b, 0);
+        return weights.map(w => w / total);
+    }
+        
+    selectProb(probs) {
+        const r = Math.random();
+        let acumulado = 0;
+        for (let i = 0; i < probs.length; i++) {
+            acumulado += probs[i];
+            if (r < acumulado) return i;
+        }
+        return probs.length - 1; // fallback
+    }
+
+    nextLevel(damage = 1, color = "white") {
+        let balls = 10 + 4*(this.level-1);
         clearTimeout(this.levelTimer);
         this.balls = [];
         let startX = this.canvas.width / 2;
@@ -572,7 +604,7 @@ class Game {
             let speed = 500;
             let vx = Math.cos(angle) * speed;
             let vy = Math.sin(angle) * speed;
-            this.balls.push(new Ball(startX, startY, vx, vy));
+            this.balls.push(new Ball(startX, startY, vx, vy, damage, color));
         }
         // Tiempo de cada nivel (15 segundos)
         timerMarket.textContent = `${this.timePerLevel}s`;
@@ -619,7 +651,7 @@ class Game {
         this.level++;
         this.makeLevelActions();
         if ((this.level-1)%this.marketEvery == 0) present("Market Time", () => this.startMarket());
-        else present(`Level ${this.level}`, () => this.nextLevel());
+        else this.startNewLevel();
     }
 
     gameLoop(ts) {
@@ -640,7 +672,7 @@ class Structure {
     }
     reduceLives(amount = 1) {
         this.lives -= amount;
-        return this.lives == 0
+        return this.lives <= 0
     }
     makeAction() {
         return;
@@ -718,6 +750,7 @@ class Bank extends Structure {
 
 const CODE_PLAYERS = ["blue", "red", "green", "goldenrod"]
 const COLOR_TO_PLAYER = {"blue": 0, "red": 1, "green": 2, "goldenrod": 3};
+const BALL_INFO = [{damage: 1, color: "FFFFFF"}, {damage: 2, color: "E066FF"}, {damage: 3, color: "9932CC"}, {damage: 4, color: "800080"}, {damage: 5, color: "4B0082"}]
 
 // Variables
 var playButton = document.getElementById("playButton")
@@ -769,11 +802,14 @@ function gameStarted() {
     selectNumPlayers.style.display = "flex";
 }
 
-function present(title, callback = null) {
+function present(title, callback = null, subtitle = null) {
     const introDiv = document.getElementById("introDiv");
     const titleIntro = document.getElementById("titleIntro");
+    const subtitleIntro = document.getElementById("subtitleIntro");
+
 
     titleIntro.textContent = title;
+    if (subtitle != null) subtitleIntro.textContent = subtitle;
     introDiv.style.display = "flex";
 
     // Creamos una función con nombre que gestiona todo
@@ -783,6 +819,8 @@ function present(title, callback = null) {
 
         // Oculta el elemento
         event.currentTarget.style.display = "none";
+
+        subtitleIntro.textContent = ""
         
         // Ejecuta el callback
         if (callback) {
