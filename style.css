@@ -1,0 +1,327 @@
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    background: #222;
+    color: white;
+    background: #737373;
+    font-family: 'Bricolage Grotesque';
+}
+
+#grid {
+    display: grid;
+    grid-template-columns: repeat(29, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    gap: 2px;
+    width: 100vw;
+    aspect-ratio: 29 / 15; /* width / height to keep 29x15 proportion */
+    flex: 0 0 auto; /* don't grow, don't shrink */
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.cell {
+    background: #555;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.cell.active {
+    background-color: white;
+}
+
+#menu {
+    flex: 1;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mainButton {
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-size: 30px;
+    background-color: rgb(42, 130, 230);
+    color: white;
+    cursor: pointer;
+    transition: background .4s;
+}
+
+.mainButton:hover {
+    background: rgb(9, 77, 155);
+}
+
+.cell.spawnerCell {
+    background-color: rgb(124, 124, 124) !important;
+}
+
+#selectNumPlayers {
+    display: none;
+    flex-direction: column;
+}
+
+.containerSelectPlayers {
+    display: flex;
+    border-radius: 5px;
+    background-color: #555;
+    justify-content: space-around;
+    margin-top: 5px;
+}
+
+.clickablePlayers {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    padding: 10px;
+    transition: background .4s;
+    cursor: pointer;
+}
+
+.clickablePlayers:hover {
+    background: #222;
+}
+
+.cellKing {
+    position: relative;
+    display: flex;
+}
+
+.cellKing:after {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    content: "";
+    border-radius: 50%;
+    background: rgb(196, 196, 196);
+}
+
+#market {
+    display: none;
+    width: calc(100% - 10px);
+    height: 100%;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+#purchaseBar {
+    height: 80%;
+    align-items: center;
+    width: 50%;
+    border-radius: 10px;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: row;
+    background-color: rgb(145, 145, 145);
+    box-shadow: 0 0 10px 0 rgba(154, 154, 154, 0.75);
+    -webkit-box-shadow: 0 0 10px 0 rgba(154,154,154,0.75);
+    -moz-box-shadow: 0 0 10px 0 rgba(154,154,154,0.75);
+}
+
+#moneyBar {
+    display: flex;
+    height: 80%;
+    width: 36%;
+    margin-left: 1%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    color: rgb(195, 195, 195);
+    font-weight: 300;
+}
+
+.textMoney {
+    display: block;
+}
+
+.moneySpan {
+    display: inline-block;
+    font-size: 1.5rem;
+}
+
+.moneyItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px;
+    transition: color .7s;
+}
+
+#playerTourn {
+    width: 5%;
+    aspect-ratio: 1/1;
+    background-color: aliceblue;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+#timerMarket {
+    text-align: center;
+    width: 8%;
+    font-weight: 900;
+    font-size: 1.5rem;
+}
+
+.elementToPurchase {
+    display: flex;
+    flex-direction: column;
+    height: 80%;
+    width: max-content;
+    margin: 0 10px;
+    cursor: pointer;
+    transition: transform .5s;
+}
+
+.elementIcon {
+    height: 85%;
+    aspect-ratio: 1/1;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background: grey;
+    flex-direction: column;
+}
+
+.bck-blue {
+    background-color: rgb(0, 0, 150);
+}
+
+.bck-red {
+    background-color: rgb(150, 0, 0);
+}
+
+.bck-green {
+    background-color: rgb(0, 88, 0);
+}
+
+.bck-goldenrod {
+    background-color: rgb(149, 111, 17);
+}
+
+
+.pricePurchase {
+    text-align: center;
+    font-size: 14px;
+    width: 100%;
+}
+
+#introDiv {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    left: -100vw;
+    background: transparent;
+    animation: presenNewtLevel cubic-bezier(0,1,1,0) 2.5s;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-weight: 700;
+}
+
+#titleIntro {
+    font-size: 100px;
+}
+
+.itemSelected {
+    transform: translateY(-10px);
+}
+
+.cellWall {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    flex-direction: column;
+}
+
+.cellBaseWall {
+    background-color: #222;
+}
+
+.cellWall span.infoDownStructure {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 0.8rem;
+}
+
+.cellWall span.infoDownStructureCenter {
+    position: absolute;
+    bottom: 5px;
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: center;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#endGameDiv {
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    display: none;
+    position: absolute;
+    background-color: rgb(0, 0, 0, 0.3);
+}
+
+#winnerDiv {
+    height: 40vh;
+    width: 60vw;
+    font-size: 70px;
+    background-color: rgb(0, 0, 0, 0.5);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.infoDownStructure {
+    font-weight: 100;
+}
+
+.infoDownStructureCenter {
+    font-weight: 100;
+}
+
+.regeWallStyle {
+    border-radius: 10px;
+}
+
+.iconStructure {
+    font-size: 1.5rem;
+    margin-top: -10px;
+}
+
+
+
+
+
+/* Animations */
+@keyframes presenNewtLevel {
+    100% { transform: translateX(200vw) }
+}
