@@ -750,7 +750,7 @@ class Bank extends Structure {
 
 const CODE_PLAYERS = ["blue", "red", "green", "goldenrod"]
 const COLOR_TO_PLAYER = {"blue": 0, "red": 1, "green": 2, "goldenrod": 3};
-const BALL_INFO = [{damage: 1, color: "FFFFFF"}, {damage: 2, color: "E066FF"}, {damage: 3, color: "9932CC"}, {damage: 4, color: "800080"}, {damage: 5, color: "4B0082"}]
+const BALL_INFO = [{damage: 1, color: "#FFFFFF"}, {damage: 2, color: "#E066FF"}, {damage: 3, color: "#9932CC"}, {damage: 4, color: "#800080"}, {damage: 5, color: "#4B0082"}]
 
 // Variables
 var playButton = document.getElementById("playButton")
