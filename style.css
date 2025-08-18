@@ -13,15 +13,14 @@ body {
 
 #grid {
     display: grid;
-    grid-template-columns: repeat(29, 1fr);
     grid-template-rows: repeat(15, 1fr);
+    grid-template-columns: repeat(29, 1fr);
     gap: 2px;
-    width: 100vw;
-    aspect-ratio: 29 / 15; /* width / height to keep 29x15 proportion */
-    flex: 0 0 auto; /* don't grow, don't shrink */
-    padding: 5px;
-    box-sizing: border-box;
-}
+    aspect-ratio: 29 / 15;     /* Mantener proporción */
+    width: min(100%, calc(100vh - 100px) * 29 / 15);
+    /* 100px ≈ altura de la purchaseBar, ajústalo a lo que mida realmente */
+    margin: 0 auto;            /* Centrar horizontalmente */
+  }
 
 .cell {
     background: #555;
