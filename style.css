@@ -323,7 +323,14 @@ body {
     font-size: 40px;
 }
 
+.stickyCellStyle > div > .iconStructure {
+    margin-top: 0px !important;
+    font-size: 3rem;
+}
 
+.stickyCellStyle {
+    opacity: .6;
+}
 
 
 

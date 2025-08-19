@@ -10,6 +10,7 @@ class Ball {
         this.radius = radius;
         this.damage = damage;
         this.color = color;
+        this.isSlowed = false;
     }
     update(dt, game) {
         // Determine how many sub-steps to use based on speed
@@ -20,11 +21,18 @@ class Ball {
         const subdt = dt / steps;
 
         for (let i = 0; i < steps; i++) {
-            this.x += this.vx * subdt;
-            this.y += this.vy * subdt;
+            let incx = this.vx * subdt;
+            let incy = this.vy * subdt;
+            this.x += incx;
+            this.y += incy;
 
             // Check collisions with structures
             if (game.checkBallStructureCollision(this)) {
+                if (this.isSlowed) {
+                    this.isSlowed = false;
+                    this.x -= (incx/1.5);
+                    this.y -= (incy/1.5);
+                }
                 break;
             }
 
@@ -96,6 +104,8 @@ class Game {
 
     checkBallStructureCollision(ball) {
         const g = this.geom;
+        const ballxIni = ball.x;
+        const ballyIni = ball.y;
         const colCenter = Math.floor((ball.x - g.padLeft) / (g.cellW + g.gapX));
         const rowCenter = Math.floor((ball.y - g.padTop)  / (g.cellH + g.gapY));
 
@@ -171,7 +181,8 @@ class Game {
                         }
                     } else if (structure instanceof Bank ||
                         structure instanceof Healer ||
-                        structure instanceof HealerPlus
+                        structure instanceof HealerPlus ||
+                        structure instanceof Investment
                     ) {
                         // Banks allways has 1 life
                         this.gridState[r][c] = null;
@@ -179,7 +190,13 @@ class Game {
                         cell.classList.remove("cellWall");
                         cell.style.backgroundColor = "";
                         cell.innerHTML = "";
-                    } 
+                    } else if (structure instanceof Sticky) {
+                        ball.isSlowed = true;
+                        ball.vx = ball_vx;
+                        ball.vy = ball_vy;
+                        ball.x = ballxIni;
+                        ball.y = ballyIni;
+                    }
 
                     return true;
                 }
@@ -412,6 +429,19 @@ class Game {
                         cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
                         cell.classList.add("cellWall");
                         cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">heart_plus</span></div><span class="infoDownStructureCenter">+${healPerTourn}</span>`;
+                    }
+                    else if (typeStructure == "investment") {
+                        let periodReturn = parseInt(this.targetPurchase.dataset.period);
+                        this.gridState[r][c] = new Investment(CODE_PLAYERS[this.marketTourn], periodReturn, r, c);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall");
+                        cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">money_bag</span></div><span class="infoDownStructureCenter">${periodReturn}</span>`;
+                    }
+                    else if (typeStructure == "sticky") {
+                        this.gridState[r][c] = new Sticky(CODE_PLAYERS[this.marketTourn]);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall", "stickyCellStyle");
+                        cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">lens_blur</span></div>`;
                     }
                     this.moneyPlayers[this.marketTourn].textContent = `${currentMoneyPlayer-priceElement}€`;
                 }
@@ -653,6 +683,14 @@ class Game {
         requestAnimationFrame(loop);
     }
 
+    giveMoney(colorPlayer, amount) {
+        let moneyP = parseInt(this.moneyPlayers[COLOR_TO_PLAYER[colorPlayer]].textContent);
+        if (!isNaN(moneyP)) {
+            moneyP += amount;
+            this.moneyPlayers[COLOR_TO_PLAYER[colorPlayer]].textContent = `${moneyP}€`;
+        }
+    }
+
     /*addMoney() {
         for (let i = 0; i < this.moneyPlayers.length; ++i) {
             let moneyP = parseInt(this.moneyPlayers[i].textContent);
@@ -704,11 +742,7 @@ class King extends Structure {
 
     // Add 25€ to player
     makeAction() {
-        let moneyP = parseInt(game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent);
-        if (!isNaN(moneyP)) {
-            moneyP += 25;
-            game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent = `${moneyP}€`;
-        }
+        game.giveMoney(this.color, 25);
     }
 }
 
@@ -753,11 +787,7 @@ class Bank extends Structure {
     }
     // Inc. money
     makeAction() {
-        let moneyP = parseInt(game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent);
-        if (!isNaN(moneyP)) {
-            moneyP += this.moneyPerTourn;
-            game.moneyPlayers[COLOR_TO_PLAYER[this.color]].textContent = `${moneyP}€`;
-        }
+        game.giveMoney(this.color, this.moneyPerTourn);
     }
 }
 
@@ -822,6 +852,39 @@ class HealerPlus extends Structure {
                 }
             }
         }
+    }
+}
+
+class Investment extends Structure {
+    constructor(color, period, r, c) {
+        super(1);
+        this.color = color;
+        this.remaining = period;
+        this.row = r;
+        this.col = c;
+    }
+
+    makeAction() {
+        if (this.remaining == 1) {
+            game.giveMoney(this.color, 1000);
+            const cell = game.gridCells[this.row][this.col];
+            cell.classList.remove("cellWall");
+            cell.style.backgroundColor = "";
+            cell.innerHTML = "";
+            game.gridState[this.row][this.col] = null;
+        }
+        
+        else {
+            --this.remaining;
+            game.gridCells[this.row][this.col].querySelector("span.infoDownStructureCenter").textContent = this.remaining;
+        }
+    }
+}
+
+class Sticky extends Structure {
+    constructor(color) {
+        super(-1);
+        this.color = color;
     }
 }
 
