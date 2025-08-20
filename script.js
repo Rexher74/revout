@@ -25,33 +25,34 @@ class Ball {
             let incy = this.vy * subdt;
             this.x += incx;
             this.y += incy;
-
+            let checkBoundaryCollision = true;
             // Check collisions with structures
             if (game.checkBallStructureCollision(this)) {
                 if (this.isSlowed) {
                     this.isSlowed = false;
-                    this.x -= (incx/1.5);
-                    this.y -= (incy/1.5);
+                    this.x -= (incx*0.8);
+                    this.y -= (incy*0.8);
                 }
-                break;
+                else checkBoundaryCollision = false;
             }
-
-            // Check collisions with grid boundaries
-            if (this.x - this.radius < 0) {
-                this.x = this.radius;
-                this.vx *= -1;
-            }
-            if (this.x + this.radius > game.canvas.width) {
-                this.x = game.canvas.width - this.radius;
-                this.vx *= -1;
-            }
-            if (this.y - this.radius < 0) {
-                this.y = this.radius;
-                this.vy *= -1;
-            }
-            if (this.y + this.radius > game.canvas.height) {
-                this.y = game.canvas.height - this.radius;
-                this.vy *= -1;
+            if (checkBoundaryCollision) {
+                // Check collisions with grid boundaries
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx *= -1;
+                }
+                if (this.x + this.radius > game.canvas.width) {
+                    this.x = game.canvas.width - this.radius;
+                    this.vx *= -1;
+                }
+                if (this.y - this.radius < 0) {
+                    this.y = this.radius;
+                    this.vy *= -1;
+                }
+                if (this.y + this.radius > game.canvas.height) {
+                    this.y = game.canvas.height - this.radius;
+                    this.vy *= -1;
+                }
             }
         }
     }
@@ -147,55 +148,15 @@ class Game {
                     ball.vx -= 2 * dot * nx;
                     ball.vy -= 2 * dot * ny;
                     // Differentiate structure types
-                    if (structure instanceof Wall) {
-                        if (structure.reduceLives(ball.damage)) {
-                            this.gridState[r][c] = null;
-                            const cell = this.gridCells[r][c];
-                            cell.classList.remove("cellWall");
-                            cell.style.backgroundColor = "";
-                            cell.innerHTML = "";
-                        } else {
-                            const cell = this.gridCells[r][c];
-                            const livesDiv = cell.querySelector("div");
-                            if (livesDiv) livesDiv.textContent = structure.lives;
-                        }
-                    } else if (structure instanceof King) {
-                        this.gridState[r][c] = null;
-                        const cell = this.gridCells[r][c];
-                        cell.style.backgroundColor = "";
-                        cell.innerHTML = "";
-                        this.eliminatePlayer(structure.color);
-                    } else if (structure instanceof BaseWall) {
-                        // Nothing to do here
-                    } else if (structure instanceof RegeWall) {
-                        if (structure.reduceLives(ball.damage)) {
-                            this.gridState[r][c] = null;
-                            const cell = this.gridCells[r][c];
-                            cell.classList.remove("cellWall", "regeWallStyle");
-                            cell.style.backgroundColor = "";
-                            cell.innerHTML = "";
-                        } else {
-                            const cell = this.gridCells[r][c];
-                            const livesDiv = cell.querySelector("div");
-                            if (livesDiv) livesDiv.textContent = structure.lives;
-                        }
-                    } else if (structure instanceof Bank ||
-                        structure instanceof Healer ||
-                        structure instanceof HealerPlus ||
-                        structure instanceof Investment
-                    ) {
-                        // Banks allways has 1 life
-                        this.gridState[r][c] = null;
-                        const cell = this.gridCells[r][c];
-                        cell.classList.remove("cellWall");
-                        cell.style.backgroundColor = "";
-                        cell.innerHTML = "";
-                    } else if (structure instanceof Sticky) {
+                    if (structure instanceof Sticky) {
                         ball.isSlowed = true;
                         ball.vx = ball_vx;
                         ball.vy = ball_vy;
                         ball.x = ballxIni;
                         ball.y = ballyIni;
+                    }
+                    else {
+                        game.makeDamageStructure(structure, ball.damage, r, c);
                     }
 
                     return true;
@@ -203,6 +164,65 @@ class Game {
             }
         }
         return false;
+    }
+
+    makeDamageStructure(structure, damage, r, c) {
+        if (structure instanceof Wall ||
+            structure instanceof RegeWall
+        ) {
+            if (structure.reduceLives(damage)) {
+                this.gridState[r][c] = null;
+                const cell = this.gridCells[r][c];
+                cell.classList.remove("cellWall");
+                cell.style.backgroundColor = "";
+                cell.innerHTML = "";
+            } else {
+                const cell = this.gridCells[r][c];
+                const livesDiv = cell.querySelector("div");
+                if (livesDiv) livesDiv.textContent = structure.lives;
+            }
+        } else if (structure instanceof King) {
+            this.gridState[r][c] = null;
+            const cell = this.gridCells[r][c];
+            cell.style.backgroundColor = "";
+            cell.innerHTML = "";
+            this.eliminatePlayer(structure.color);
+        } else if (structure instanceof BaseWall) {
+            // Nothing to do here
+        } else if (structure instanceof Bank ||
+            structure instanceof Healer ||
+            structure instanceof HealerPlus ||
+            structure instanceof Investment
+        ) {
+            this.gridState[r][c] = null;
+            const cell = this.gridCells[r][c];
+            cell.classList.remove("cellWall");
+            cell.style.backgroundColor = "";
+            cell.innerHTML = "";
+        } else if (structure instanceof Savings) {
+            structure.addSavings();
+            this.gridState[r][c] = null;
+            const cell = this.gridCells[r][c];
+            cell.classList.remove("cellWall");
+            cell.style.backgroundColor = "";
+            cell.innerHTML = "";
+        } else if (structure instanceof Glass) {
+            let eliminated = structure.reduceLives(damage);
+            if (structure.lives >= 0) {
+                structure.makeDamageNear(damage);
+                if (eliminated) {
+                    this.gridState[r][c] = null;
+                    const cell = this.gridCells[r][c];
+                    cell.classList.remove("cellWall");
+                    cell.style.backgroundColor = "";
+                    cell.innerHTML = "";
+                } else {
+                    const cell = this.gridCells[r][c];
+                    const livesDiv = cell.querySelector("div");
+                    if (livesDiv) livesDiv.textContent = structure.lives;
+                }
+            }
+        }
     }
     
 
@@ -256,7 +276,7 @@ class Game {
                     placed++;
                 }
             }
-        } else if (this.nplayers === 4) {
+        } else if (this.nplayers === 3 || this.nplayers === 4) {
             // Place in top-left quadrant and mirror to other quadrants
             num /= 4;
             let placed = 0;
@@ -406,7 +426,7 @@ class Game {
                         let regeLives = parseInt(this.targetPurchase.dataset.rege);
                         this.gridState[r][c] = new RegeWall(livesElement, CODE_PLAYERS[this.marketTourn], regeLives, cell);
                         cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
-                        cell.classList.add("cellWall", "regeWallStyle");
+                        cell.classList.add("cellWall");
                         cell.innerHTML = `<div>${livesElement}</div><span class="infoDownStructure">+${regeLives}</span>`;
                     }
                     else if (typeStructure == "bank") {
@@ -443,6 +463,19 @@ class Game {
                         cell.classList.add("cellWall", "stickyCellStyle");
                         cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">lens_blur</span></div>`;
                     }
+                    else if (typeStructure == "savings") {
+                        let savingsPerTourn = parseInt(this.targetPurchase.dataset.savepertourn);
+                        this.gridState[r][c] = new Savings(CODE_PLAYERS[this.marketTourn], savingsPerTourn, r, c);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall");
+                        cell.innerHTML = `<div><span class="material-symbols-outlined iconStructure">savings</span></div><span class="infoDownStructureCenter">0</span>`;
+                    }
+                    else if (typeStructure == "glass") {
+                        this.gridState[r][c] = new Glass(CODE_PLAYERS[this.marketTourn], livesElement, r, c);
+                        cell.style.backgroundColor = CODE_PLAYERS[this.marketTourn];
+                        cell.classList.add("cellWall");
+                        cell.innerHTML = `<div style='opacity: 0.5;'>${livesElement}</div>`
+                    }
                     this.moneyPlayers[this.marketTourn].textContent = `${currentMoneyPlayer-priceElement}€`;
                 }
             }
@@ -477,6 +510,19 @@ class Game {
 
             this.gridCells[(this.rows-1)/2][0].classList.add("cellKing");
             this.gridCells[(this.rows-1)/2][this.cols-1].classList.add("cellKing");
+        }
+        else if (this.nplayers == 3) {
+            this.gridState[0][0] = new King(1, CODE_PLAYERS[0]);
+            this.gridState[this.rows-1][0] = new King(1, CODE_PLAYERS[1]);
+            this.gridState[0][this.cols-1] = new King(1, CODE_PLAYERS[2]);
+
+            this.gridCells[0][0].style.backgroundColor = CODE_PLAYERS[0];
+            this.gridCells[this.rows-1][0].style.backgroundColor = CODE_PLAYERS[1];
+            this.gridCells[0][this.cols-1].style.backgroundColor = CODE_PLAYERS[2];
+
+            this.gridCells[0][0].classList.add("cellKing");
+            this.gridCells[this.rows-1][0].classList.add("cellKing");
+            this.gridCells[0][this.cols-1].classList.add("cellKing");
         }
         else if (this.nplayers == 4) {
             this.gridState[0][0] = new King(1, CODE_PLAYERS[0]);
@@ -523,6 +569,11 @@ class Game {
             const row = (this.rows - 1) / 2;
             this.markAvailable.call(this, row, 0, CODE_PLAYERS[0]);
             this.markAvailable.call(this, row, this.cols - 1, CODE_PLAYERS[1]);
+        }
+        else if (this.nplayers == 3) {
+            this.markAvailable.call(this, 0, 0, CODE_PLAYERS[0]);
+            this.markAvailable.call(this, this.rows - 1, 0, CODE_PLAYERS[1]);
+            this.markAvailable.call(this, 0, this.cols - 1, CODE_PLAYERS[2]);
         }
         else if (this.nplayers == 4) {
             // Four kings: blue (0,0), red (rows-1,0), green (0,cols-1), goldenrod (rows-1,cols-1)
@@ -885,6 +936,54 @@ class Sticky extends Structure {
     constructor(color) {
         super(-1);
         this.color = color;
+    }
+}
+
+class Savings extends Structure {
+    constructor(color, savePerTourn, row, col) {
+        super(1);
+        this.color = color;
+        this.savePerTourn = savePerTourn;
+        this.row = row;
+        this.col = col;
+    }
+
+    makeAction() {
+        let currentSavings = parseInt(game.gridCells[this.row][this.col].querySelector("span.infoDownStructureCenter").textContent);
+        currentSavings += this.savePerTourn;
+        game.gridCells[this.row][this.col].querySelector("span.infoDownStructureCenter").textContent = `${currentSavings}€`;
+    }
+
+    addSavings() {
+        let currentSavings = parseInt(game.gridCells[this.row][this.col].querySelector("span.infoDownStructureCenter").textContent);
+        game.giveMoney(this.color, currentSavings);
+    }
+}
+
+class Glass extends Structure {
+    constructor(color, lives, r, c) {
+        super(lives);
+        this.color = color;
+        this.row = r;
+        this.col = c;
+    }
+
+    makeDamageNear(damage) {
+        let r = this.row;
+        let c = this.col;
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1], // ortogonales
+            [-1, -1], [-1, 1], [1, -1], [1, 1] // diagonales
+        ];
+        for (const [dr, dc] of directions) {
+            const nr = r + dr, nc = c + dc;
+            if (nr >= 0 && nr < game.rows && nc >= 0 && nc < game.cols) {
+                const neighbor = game.gridState[nr][nc];
+                if (neighbor) {
+                    game.makeDamageStructure(neighbor, damage, nr, nc);
+                }
+            }
+        }
     }
 }
 

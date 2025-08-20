@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=account_balance,favorite,heart_plus,lens_blur,money_bag"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=account_balance,favorite,heart_plus,lens_blur,money_bag,savings"/>
     <link href="./style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -22,6 +22,7 @@
             <div class="containerSelectPlayers">
                 <div class="clickablePlayers">1</div>
                 <div class="clickablePlayers">2</div>
+                <div class="clickablePlayers">3</div>
                 <div class="clickablePlayers">4</div>
             </div>
         </div>
@@ -64,9 +65,31 @@
                     <div class="elementIcon regeWallStyle" style="opacity: 1;">30<span class="infoDownStructure">+5</span></div>
                     <div class="pricePurchase">150€</div>
                 </div>
-                <div class="elementToPurchase" data-type="regewall" data-price="500" data-lives="100" data-rege="20">
+                <div class="elementToPurchase" data-type="regewall" data-price="550" data-lives="100" data-rege="20">
                     <div class="elementIcon regeWallStyle" style="opacity: 1;">100<span class="infoDownStructure">+20</span></div>
-                    <div class="pricePurchase">500€</div>
+                    <div class="pricePurchase">550€</div>
+                </div>
+
+                <!--Glass-->
+                <div class="elementToPurchase" data-type="glass" data-price="25" data-lives="20">
+                    <div class="elementIcon" style="opacity: 0.5;">20</div>
+                    <div class="pricePurchase">25€</div>
+                </div>
+                <div class="elementToPurchase" data-type="glass" data-price="60" data-lives="50">
+                    <div class="elementIcon" style="opacity: 0.5;">50</div>
+                    <div class="pricePurchase">60€</div>
+                </div>
+                <div class="elementToPurchase" data-type="glass" data-price="110" data-lives="100">
+                    <div class="elementIcon" style="opacity: 0.5;">100</div>
+                    <div class="pricePurchase">110€</div>
+                </div>
+                <div class="elementToPurchase" data-type="glass" data-price="190" data-lives="200">
+                    <div class="elementIcon" style="opacity: 0.5;">200</div>
+                    <div class="pricePurchase">190€</div>
+                </div>
+                <div class="elementToPurchase" data-type="glass" data-price="375" data-lives="400">
+                    <div class="elementIcon" style="opacity: 0.5;">400</div>
+                    <div class="pricePurchase">375€</div>
                 </div>
 
                 <!--Banks-->
@@ -129,6 +152,32 @@
                     <div class="pricePurchase">50€</div>
                 </div>
 
+                <!--Savings-->
+                <div class="elementToPurchase" data-type="savings" data-price="200" data-lives="1" data-savepertourn="25">
+                    <div class="elementIcon" style="opacity: 1;">
+                        <span class="material-symbols-outlined">
+                            savings
+                        </span>
+                    <span class="infoDownStructure">+25€</span></div>
+                    <div class="pricePurchase">200€</div>
+                </div>
+                <div class="elementToPurchase" data-type="savings" data-price="325" data-lives="1" data-savepertourn="50">
+                    <div class="elementIcon" style="opacity: 1;">
+                        <span class="material-symbols-outlined">
+                            savings
+                        </span>
+                    <span class="infoDownStructure">+50€</span></div>
+                    <div class="pricePurchase">325€</div>
+                </div>
+                <div class="elementToPurchase" data-type="savings" data-price="550" data-lives="1" data-savepertourn="100">
+                    <div class="elementIcon" style="opacity: 1;">
+                        <span class="material-symbols-outlined">
+                            savings
+                        </span>
+                    <span class="infoDownStructure">+100€</span></div>
+                    <div class="pricePurchase">550€</div>
+                </div>
+
                 <!--Healer-->
                 <div class="elementToPurchase" data-type="healer" data-price="25" data-lives="1" data-healpertourn="1">
                     <div class="elementIcon" style="opacity: 1;">
@@ -182,13 +231,13 @@
                 </div>
                 
                 <!--Sticky-->
-                <div class="elementToPurchase" data-type="sticky" data-price="100" data-lives="-1">
+                <div class="elementToPurchase" data-type="sticky" data-price="50" data-lives="-1">
                     <div class="elementIcon" style="opacity: 1;">
                         <span class="material-symbols-outlined" style="font-size:3rem;">
                             lens_blur
                         </span>
                     </div>
-                    <div class="pricePurchase">100€</div>
+                    <div class="pricePurchase">50€</div>
                 </div>
 
             </div>

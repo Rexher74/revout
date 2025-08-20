@@ -1,3 +1,7 @@
+html {
+    /* Tamaño base: mínimo 10px, máximo 18px, escalando con 3vw */
+    font-size: clamp(8px, 2.5vw, 14px);
+}
 body {
     margin: 0;
     display: flex;
@@ -18,7 +22,7 @@ body {
     grid-template-columns: repeat(29, 1fr);
     gap: 2px;
     aspect-ratio: 29 / 15;     /* Mantener proporción */
-    width: min(100%, calc(100vh - 100px) * 29 / 15);
+    width: min(100%, calc(100vh - 150px) * 29 / 15);
     /* 100px ≈ altura de la purchaseBar, ajústalo a lo que mida realmente */
     margin: 0 auto;            /* Centrar horizontalmente */
   }
@@ -45,7 +49,7 @@ body {
 .mainButton {
     padding: 10px 30px;
     border-radius: 10px;
-    font-size: 30px;
+    font-size: 1.875rem;
     background-color: rgb(42, 130, 230);
     color: white;
     cursor: pointer;
@@ -216,7 +220,7 @@ body {
 
 .pricePurchase {
     text-align: center;
-    font-size: 14px;
+    font-size: 0.8rem;
     width: 100%;
 }
 
@@ -235,7 +239,7 @@ body {
 }
 
 #titleIntro {
-    font-size: 100px;
+    font-size: 5rem;
 }
 
 .itemSelected {
@@ -293,7 +297,7 @@ body {
 #winnerDiv {
     height: 40vh;
     width: 60vw;
-    font-size: 70px;
+    font-size: 4rem;
     background-color: rgb(0, 0, 0, 0.5);
     border-radius: 20px;
     display: flex;
@@ -310,22 +314,18 @@ body {
     font-weight: 100;
 }
 
-.regeWallStyle {
-    border-radius: 10px;
-}
-
 .iconStructure {
     font-size: 1.5rem;
-    margin-top: -10px;
+    margin-top: -0.6rem;
 }
 
 #subtitleIntro {
-    font-size: 40px;
+    font-size: 3rem;
 }
 
 .stickyCellStyle > div > .iconStructure {
     margin-top: 0px !important;
-    font-size: 3rem;
+    font-size: 2rem;
 }
 
 .stickyCellStyle {
@@ -337,4 +337,66 @@ body {
 /* Animations */
 @keyframes presenNewtLevel {
     100% { transform: translateX(200vw) }
+}
+
+@media screen and (max-width: 1300px), (max-height: 775px) {
+  .cellWall {
+    font-size: 0.8rem;
+  }
+  .cellWall span.infoDownStructure {
+    font-size: 0.7rem;
+  }
+  .iconStructure {
+    font-size: 1.2rem;
+  }
+  .infoDownStructureCenter {
+    font-size: 0.7rem;
+  }
+}
+
+@media screen and (max-width: 1100px), (max-height: 650px) {
+    .cellWall {
+      font-size: 0.7rem;
+    }
+    .cellWall span.infoDownStructure {
+      font-size: 0.6rem;
+    }
+    .iconStructure {
+        font-size: 1rem;
+        margin-top: -0.5rem;
+    }
+    .cellWall span.infoDownStructureCenter {
+        font-size: 0.6rem;
+      }
+}
+
+@media screen and (max-width: 950px), (max-height: 550px) {
+    .cellWall {
+      font-size: 0.6rem;
+    }
+    .cellWall span.infoDownStructure {
+      font-size: 0.5rem;
+    }
+    .iconStructure {
+        font-size: 0.85rem;
+    }
+    .cellWall span.infoDownStructureCenter {
+        font-size: 0.5rem;
+      }
+}
+
+@media screen and (max-width: 825px), (max-height: 500px) {
+    .cellWall {
+      font-size: 0.5rem;
+    }
+    .cellWall span.infoDownStructure {
+      font-size: 0.4rem;
+    }
+    .iconStructure {
+        font-size: 0.7rem;
+        margin-top: -0.4rem;
+    }
+    .cellWall span.infoDownStructureCenter {
+        font-size: 0.4rem;
+      }
 }
